@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Player</title>
+    <!-- Favicon dari gambar yang diimpor di Spck Editor (Ubah path jika diperlukan) -->
+    <link rel="icon" href="/favicon.jpg" type="image/png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Header / Navigasi Atas -->
+    <header>
+        <div class="logo">Video Player <span class="watermark">by Daus XD</span></div>
+        <button id="openPopUpBtn" class="btn-upload-trigger">Unggah Video</button>
+    </header>
+
+    <!-- Halaman Utama Tempat Pemutar Video -->
+    <main class="main-container">
+        <!-- Area ini hanya muncul jika video sudah dipilih/diunggah -->
+        <div id="videoDisplayArea" class="video-display-area hidden">
+            <div id="videoBackground" class="video-background-container">
+                <!-- Elemen video atau iframe akan dimasukkan secara dinamis via JS -->
+                <div id="mediaWrapper"></div>
+            </div>
+            
+            <!-- Alat Pengontrol berada di bawah background video -->
+            <div class="control-panel">
+                <button id="closeVideoBtn" class="btn-close-video">Close Video</button>
+            </div>
+        </div>
+
+        <!-- Tampilan default saat video belum ada -->
+        <div id="placeholderArea" class="placeholder-area">
+            <div class="placeholder-icon">🎬</div>
+            <p>Belum ada video yang diputar. Klik tombol di kanan atas untuk mengunggah.</p>
+        </div>
+    </main>
+
+    <!-- Pop-up Tempat Mengunggah Video (Modal) -->
+    <div id="uploadPopUp" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Metode Pengunggahan Video</h3>
+                <button id="closePopUpBtn" class="btn-close-popup">&times;</button>
+            </div>
+            
+            <!-- Tab Sistem -->
+            <div class="tab-container">
+                <button class="tab-btn active" data-tab="deviceTab">Lokal Perangkat</button>
+                <button class="tab-btn" data-tab="youtubeTab">YouTube Link</button>
+            </div>
+
+            <!-- Konten Tab 1: Perangkat -->
+            <div id="deviceTab" class="tab-content active">
+                <p class="tab-desc">Pilih file video langsung dari penyimpanan perangkat Anda.</p>
+                <div class="input-group">
+                    <input type="file" id="deviceVideoInput" accept="video/*">
+                </div>
+                <button id="confirmDeviceBtn" class="btn-confirm">Konfirmasi Unggah</button>
+            </div>
+
+            <!-- Konten Tab 2: YouTube -->
+            <div id="youtubeTab" class="tab-content">
+                <p class="tab-desc">Masukkan tautan/link video YouTube yang ingin diputar.</p>
+                <div class="input-group">
+                    <input type="text" id="youtubeLinkInput" placeholder="https://www.youtube.com/watch?v=...">
+                </div>
+                <button id="confirmYoutubeBtn" class="btn-confirm">Konfirmasi Link</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
