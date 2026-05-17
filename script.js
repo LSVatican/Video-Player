@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Definisi Elemen DOM
+    // ==========================================
+    // DEFINISI ELEMEN DOM
+    // ==========================================
     const openUploadBtn = document.getElementById('open-upload-btn');
     const closeModalBtn = document.getElementById('close-modal-btn');
     const uploadModal = document.getElementById('upload-modal');
@@ -64,7 +66,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ==========================================
-    // FUNGSI UTAMA KONTROL VIDEO
+    // FITUR BARU: FUNGSI RESET / HAPUS INPUT AUTOMATIS
+    // ==========================================
+    function resetInputs() {
+        deviceVideoInput.value = '';   // Menghapus file yang sempat dipilih
+        youtubeLinkInput.value = '';   // Mengosongkan kolom link YouTube
+        tiktokLinkInput.value = '';    // Mengosongkan kolom link TikTok
+    }
+
+    // ==========================================
+    // KONTROL POP-UP (MODAL) & NAVIGASI TAB
     // ==========================================
 
     // Trigger Buka Pop-Up (Ditolak Jika Video Sedang Diputar)
@@ -76,12 +87,13 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadModal.classList.add('open');
     });
 
-    // Tutup Pop-Up
+    // Tutup Pop-Up melalui tombol 'X' (Otomatis Menghapus Inputan yang belum diunggah)
     closeModalBtn.addEventListener('click', () => {
         uploadModal.classList.remove('open');
+        resetInputs(); // <--- Fungsi penghapus dijalankan di sini
     });
 
-    // Navigasi Tab Sistem
+    // Navigasi Tab Sistem di dalam Pop-Up
     tabBtns.forEach(btn => {
         btn.addEventListener('click', () => {
             tabBtns.forEach(b => b.classList.remove('active'));
@@ -91,6 +103,21 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // ==========================================
+    // PARSER LINK (YOUTUBE & TIKTOK)
+    // ==========================================
+    function parseYouTube(url) {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    function parseTikTok(url) {
+        const regExp = /\/video\/(\d+)/;
+        const match = url.match(regExp);
+        return (match && match[1]) ? match[1] : null;
+    }
+
     // Mengaktifkan Tampilan Player & Animasi Background Glow
     function activateVideoPlayer() {
         placeholderText.style.display = 'none';
@@ -99,27 +126,14 @@ document.addEventListener('DOMContentLoaded', () => {
         closeVideoBtn.removeAttribute('disabled');
         isVideoPlaying = true;
         uploadModal.classList.remove('open');
-    }
-
-    // Parser Tautan YouTube Asli ke Bentuk Embed
-    function parseYouTube(url) {
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-        const match = url.match(regExp);
-        return (match && match[2].length === 11) ? match[2] : null;
-    }
-
-    // Parser Tautan TikTok Asli ke Bentuk Embed 
-    function parseTikTok(url) {
-        const regExp = /\/video\/(\d+)/;
-        const match = url.match(regExp);
-        return (match && match[1]) ? match[1] : null;
+        resetInputs(); // Bersihkan sisa inputan setelah sukses tayang
     }
 
     // ==========================================
-    // LOGIKA PROSES UNGHAH & SIMPAN STATE
+    // LOGIKA PROSES KONFIRMASI UNGHAH
     // ==========================================
 
-    // 1. Konfirmasi Tab Perangkat
+    // 1. Konfirmasi Tab Perangkat (Wajib Video)
     confirmDeviceBtn.addEventListener('click', async () => {
         const file = deviceVideoInput.files[0];
         if (!file) {
@@ -133,14 +147,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         alert('Informasi: Berhasil memuat video dari perangkat Anda!');
         
-        // Simpan file asli ke database lokal agar tidak hilang saat refresh
+        // Simpan ke database lokal agar kebal refresh
         await saveDeviceVideo(file);
         localStorage.setItem('video_state', JSON.stringify({ type: 'device', source: 'local' }));
 
         const fileURL = URL.createObjectURL(file);
         videoWrapper.innerHTML = `<video src="${fileURL}" controls autoplay></video>`;
         activateVideoPlayer();
-        deviceVideoInput.value = ''; 
     });
 
     // 2. Konfirmasi Tab YouTube Link
@@ -158,12 +171,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         alert('Informasi: Link YouTube berhasil dikonfirmasi dan siap diputar!');
         
-        // Simpan ID video ke localStorage
+        // Simpan status state ke localStorage
         localStorage.setItem('video_state', JSON.stringify({ type: 'youtube', source: videoId }));
 
         videoWrapper.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
         activateVideoPlayer();
-        youtubeLinkInput.value = ''; 
     });
 
     // 3. Konfirmasi Tab TikTok Link
@@ -181,20 +193,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         alert('Informasi: Link TikTok berhasil dikonfirmasi dan siap diputar!');
         
-        // Simpan ID video ke localStorage
+        // Simpan status state ke localStorage
         localStorage.setItem('video_state', JSON.stringify({ type: 'tiktok', source: videoId }));
 
         videoWrapper.innerHTML = `<iframe src="https://www.tiktok.com/embed/v2/${videoId}" allowfullscreen></iframe>`;
         activateVideoPlayer();
-        tiktokLinkInput.value = ''; 
     });
 
     // ==========================================
-    // SISTEM AUTOMATIS LOAD STATE SETELAH REFRESH
+    // SISTEM AUTOMATIS LOAD STATE (ANTI REFRESH)
     // ==========================================
     async function loadSavedVideo() {
         const savedState = localStorage.getItem('video_state');
-        if (!savedState) return; // Jika tidak ada data tersimpan, biarkan kosong semula
+        if (!savedState) return;
 
         const { type, source } = JSON.parse(savedState);
 
@@ -214,20 +225,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Jalankan pengecekan video tersimpan setiap kali halaman dimuat ulang
+    // Jalankan pemulihan video otomatis saat web dimuat ulang
     loadSavedVideo();
 
     // ==========================================
-    // FITUR CLOSE VIDEO (MENGHAPUS SEMUA STORAGE)
+    // FITUR CLOSE VIDEO (KEMBALI KE SEMULA)
     // ==========================================
     closeVideoBtn.addEventListener('click', async () => {
         const confirmClose = confirm('Apakah Anda yakin ingin menutup video yang sedang diputar?');
         if (confirmClose) {
-            // Hapus data dari memori browser total
+            // Hapus total data dari memori browser
             localStorage.removeItem('video_state');
             await clearDeviceVideo();
 
-            // Kembalikan tampilan web seperti semula
+            // Kembalikan tampilan halaman beranda seperti semula
             videoWrapper.innerHTML = '';
             videoWrapper.style.display = 'none';
             placeholderText.style.display = 'block';
