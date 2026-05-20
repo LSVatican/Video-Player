@@ -259,5 +259,22 @@ document.addEventListener('DOMContentLoaded', () => {
             closeVideoBtn.setAttribute('disabled', 'true');
             isVideoPlaying = false;
         }
+        
+        // Cek apakah ada kiriman video dari luar via parameter URL (?shared_video=...)
+const urlParams = new URLSearchParams(window.location.search);
+const sharedVideoUrl = urlParams.get('shared_video');
+
+if (sharedVideoUrl) {
+    // Jalankan pemutar video otomatis dari video luar yang dikirim
+    const videoWrapper = document.getElementById('video-wrapper');
+    videoWrapper.innerHTML = `<video src="${sharedVideoUrl}" controls autoplay></video>`;
+    
+    // Aktifkan tampilan player (asumsi fungsi activateVideoPlayer sudah ada di script.js Anda)
+    placeholderText.style.display = 'none';
+    videoWrapper.style.display = 'block';
+    playerContainer.classList.add('active-video');
+    closeVideoBtn.removeAttribute('disabled');
+    isVideoPlaying = true;
+}
     });
 });
