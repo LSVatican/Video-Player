@@ -1,3 +1,16 @@
+// Cek apakah dibuka dari APK Android buatan Kodular
+const isAndroidAPK = navigator.userAgent.includes("VideoPlayerAPK");
+
+const apkBanner = document.getElementById('apk-banner');
+
+if (!isAndroidAPK) {
+    // Jika BUKAN dibuka dari APK (berarti dari Chrome/browser biasa), munculkan banner
+    apkBanner.style.display = 'block';
+} else {
+    // Jika dibuka dari dalam APK, pastikan banner tersembunyi
+    apkBanner.style.display = 'none';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     // DEFINISI ELEMEN DOM
