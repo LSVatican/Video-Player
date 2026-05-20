@@ -1,16 +1,3 @@
-// Cek apakah dibuka dari APK Android buatan Kodular
-const isAndroidAPK = navigator.userAgent.includes("VideoPlayerAPK");
-
-const apkBanner = document.getElementById('apk-banner');
-
-if (!isAndroidAPK) {
-    // Jika BUKAN dibuka dari APK (berarti dari Chrome/browser biasa), munculkan banner
-    apkBanner.style.display = 'block';
-} else {
-    // Jika dibuka dari dalam APK, pastikan banner tersembunyi
-    apkBanner.style.display = 'none';
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     // ==========================================
     // DEFINISI ELEMEN DOM
@@ -261,20 +248,3 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-
-// Cek apakah ada kiriman video dari luar via parameter URL (?shared_video=...)
-const urlParams = new URLSearchParams(window.location.search);
-const sharedVideoUrl = urlParams.get('shared_video');
-
-if (sharedVideoUrl) {
-    // Jalankan pemutar video otomatis dari video luar yang dikirim
-    const videoWrapper = document.getElementById('video-wrapper');
-    videoWrapper.innerHTML = `<video src="${sharedVideoUrl}" controls autoplay></video>`;
-    
-    // Aktifkan tampilan player (asumsi fungsi activateVideoPlayer sudah ada di script.js Anda)
-    placeholderText.style.display = 'none';
-    videoWrapper.style.display = 'block';
-    playerContainer.classList.add('active-video');
-    closeVideoBtn.removeAttribute('disabled');
-    isVideoPlaying = true;
-}
