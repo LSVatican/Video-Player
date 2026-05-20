@@ -259,8 +259,10 @@ document.addEventListener('DOMContentLoaded', () => {
             closeVideoBtn.setAttribute('disabled', 'true');
             isVideoPlaying = false;
         }
-        
-        // Cek apakah ada kiriman video dari luar via parameter URL (?shared_video=...)
+    });
+});
+
+// Cek apakah ada kiriman video dari luar via parameter URL (?shared_video=...)
 const urlParams = new URLSearchParams(window.location.search);
 const sharedVideoUrl = urlParams.get('shared_video');
 
@@ -276,5 +278,3 @@ if (sharedVideoUrl) {
     closeVideoBtn.removeAttribute('disabled');
     isVideoPlaying = true;
 }
-    });
-});
