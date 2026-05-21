@@ -22,30 +22,39 @@ const confirmTiktokBtn = document.getElementById('confirmTiktokBtn');
 
 // Status Pemutar
 let isVideoPlaying = false;
-let db = null;
 
-// --- 1. Inisialisasi IndexedDB ---
-const dbRequest = indexedDB.open("VideoPlayerDB", 1);
+// --- SINKRONISASI LOCALSTORAGE (ANTI-REFRESH) ---
+window.addEventListener('DOMContentLoaded', () => {
+    const savedType = localStorage.getItem('videoType');
+    const savedSource = localStorage.getItem('videoSource');
 
-dbRequest.onupgradeneeded = function(e) {
-    let database = e.target.result;
-    if (!database.objectStoreNames.contains("videos")) {
-        database.createObjectStore("videos", { keyPath: "id" });
+    if (savedType && savedSource) {
+        if (savedType === 'youtube') {
+            // Putar otomatis YouTube
+            localPlayer.style.display = 'none';
+            embedPlayer.src = savedSource;
+            embedPlayer.style.display = 'block';
+            activateVideoMode();
+        } else if (savedType === 'tiktok') {
+            // Putar otomatis TikTok
+            localPlayer.style.display = 'none';
+            embedPlayer.src = savedSource;
+            embedPlayer.style.display = 'block';
+            activateVideoMode();
+        } else if (savedType === 'local') {
+            // Untuk file lokal, ingatkan user untuk memilih file yang sama demi keamanan browser
+            alert(`Sesi terakhir memutar video perangkat: "${savedSource}". Silakan pilih kembali file tersebut untuk melanjutkan.`);
+            isVideoPlaying = false; // Set sementara agar popup bisa dibuka
+            uploadPopup.classList.add('show');
+            // Arahkan langsung ke tab perangkat
+            switchTab('tab-lokal');
+        }
     }
-};
+});
 
-dbRequest.onsuccess = function(e) {
-    db = e.target.result;
-    // Cek apakah ada video yang tersimpan sebelumnya saat aplikasi dibuka/di-refresh
-    checkSavedVideo();
-};
-
-dbRequest.onerror = function(e) {
-    console.error("Gagal membuka IndexedDB:", e.target.error);
-};
-
-// --- 2. Logika Pop-Up & Animasi ---
+// --- Logika Pop-Up & Animasi ---
 openUploadBtn.addEventListener('click', () => {
+    // TOLAK PENGUNGGAHAN BARU JIKA VIDEO SEDANG BERJALAN
     if (isVideoPlaying) {
         alert("Gagal mengunggah! Harap tutup (Close Video) terlebih dahulu video yang sedang diputar saat ini.");
         return;
@@ -58,18 +67,25 @@ function closePopup() {
 }
 closePopupBtn.addEventListener('click', closePopup);
 
-// Sistem Penggantian Tab
+// Fungsi ganti tab kustom
+function switchTab(tabId) {
+    tabButtons.forEach(btn => {
+        if(btn.getAttribute('data-tab') === tabId) btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+    tabContents.forEach(content => {
+        if(content.id === tabId) content.classList.add('active');
+        else content.classList.remove('active');
+    });
+}
+
 tabButtons.forEach(button => {
     button.addEventListener('click', () => {
-        const targetTab = button.getAttribute('data-tab');
-        tabButtons.forEach(btn => btn.classList.remove('active'));
-        tabContents.forEach(content => content.classList.remove('active'));
-        button.classList.add('active');
-        document.getElementById(targetTab).classList.add('active');
+        switchTab(button.getAttribute('data-tab'));
     });
 });
 
-// --- 3. Fungsi Aktivasi & Pemuatan Tampilan ---
+// --- Pengaturan Tampilan Selesai Unggah ---
 function activateVideoMode() {
     isVideoPlaying = true;
     placeholderText.style.display = 'none';
@@ -79,49 +95,9 @@ function activateVideoMode() {
     closePopup();
 }
 
-// --- 4. Fungsi Simpan & Ambil Data Video (IndexedDB) ---
-function saveVideoToDB(videoData) {
-    if (!db) return;
-    const transaction = db.transaction(["videos"], "readwrite");
-    const store = transaction.objectStore("videos");
-    store.put(videoData);
-}
+// --- Logika Pemrosesan Video ---
 
-function checkSavedVideo() {
-    if (!db) return;
-    const transaction = db.transaction(["videos"], "readonly");
-    const store = transaction.objectStore("videos");
-    const request = store.get("currentVideo");
-
-    request.onsuccess = function(e) {
-        const data = e.target.result;
-        if (data) {
-            if (data.type === 'local') {
-                // Ambil kembali file Blob video lokal
-                const fileURL = URL.createObjectURL(data.file);
-                embedPlayer.style.display = 'none';
-                localPlayer.src = fileURL;
-                localPlayer.style.display = 'block';
-            } else if (data.type === 'youtube' || data.type === 'tiktok') {
-                localPlayer.style.display = 'none';
-                embedPlayer.src = data.url;
-                embedPlayer.style.display = 'block';
-            }
-            activateVideoMode();
-        }
-    };
-}
-
-function clearSavedVideo() {
-    if (!db) return;
-    const transaction = db.transaction(["videos"], "readwrite");
-    const store = transaction.objectStore("videos");
-    store.delete("currentVideo");
-}
-
-// --- 5. Logika Pemrosesan Video ---
-
-// Perangkat (Maksimal 1 GB)
+// 1. Unggah dari Perangkat (Wajib File Video)
 confirmLocalBtn.addEventListener('click', () => {
     const file = localInput.files[0];
     if (!file) {
@@ -134,18 +110,8 @@ confirmLocalBtn.addEventListener('click', () => {
         return;
     }
 
-    // Validasi Ukuran File (1 GB = 1024 * 1024 * 1024 bytes)
-    const maxSizeBytes = 1024 * 1024 * 1024; 
-    if (file.size > maxSizeBytes) {
-        alert("Gagal! Ukuran video melebihi batas maksimal 1 GB.");
-        return;
-    }
-
-    alert(`Berhasil memuat: ${file.name}`);
+    alert(`Berhasil mengunggah: ${file.name}`);
     
-    // Simpan ke IndexedDB agar tidak hilang saat refresh
-    saveVideoToDB({ id: "currentVideo", type: "local", file: file });
-
     const fileURL = URL.createObjectURL(file);
     embedPlayer.style.display = 'none';
     embedPlayer.src = '';
@@ -154,10 +120,14 @@ confirmLocalBtn.addEventListener('click', () => {
     localPlayer.style.display = 'block';
     localPlayer.play();
     
+    // Simpan tanda sesi lokal ke localStorage
+    localStorage.setItem('videoType', 'local');
+    localStorage.setItem('videoSource', file.name);
+    
     activateVideoMode();
 });
 
-// YouTube Link
+// 2. Unggah Link YouTube Asli
 confirmYoutubeBtn.addEventListener('click', () => {
     const urlValue = youtubeInput.value.trim();
     if (!urlValue) {
@@ -171,27 +141,28 @@ confirmYoutubeBtn.addEventListener('click', () => {
 
     if (match && match[2].length === 11) {
         videoId = match[2];
-        const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        const finalEmbedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
         
-        // Simpan tautan embed ke IndexedDB
-        saveVideoToDB({ id: "currentVideo", type: "youtube", url: embedUrl });
-
         localPlayer.style.display = 'none';
         localPlayer.pause();
         localPlayer.src = '';
 
-        embedPlayer.src = embedUrl;
+        embedPlayer.src = finalEmbedUrl;
         embedPlayer.style.display = 'block';
         
-        alert("Link YouTube Terkonfirmasi!");
+        // Simpan data ke localStorage agar tidak hilang saat refresh
+        localStorage.setItem('videoType', 'youtube');
+        localStorage.setItem('videoSource', finalEmbedUrl);
+
+        alert("Link YouTube Terkonfirmasi! Video siap diputar.");
         youtubeInput.value = ""; 
         activateVideoMode();
     } else {
-        alert("Tautan YouTube tidak valid!");
+        alert("Tautan YouTube tidak valid! Gunakan tautan asli video YouTube.");
     }
 });
 
-// TikTok Link
+// 3. Unggah Link TikTok Asli
 confirmTiktokBtn.addEventListener('click', () => {
     const urlValue = tiktokInput.value.trim();
     if (!urlValue) {
@@ -200,51 +171,57 @@ confirmTiktokBtn.addEventListener('click', () => {
     }
 
     if (urlValue.includes('tiktok.com')) {
-        let embedUrl = `https://www.tiktok.com/player/v1/${urlValue.split('/video/')[1]?.split('?')[0] || ''}?autoplay=1`;
-        if(!embedUrl.endsWith('1')){
-             embedUrl = urlValue; 
-        }
-
-        // Simpan tautan embed ke IndexedDB
-        saveVideoToDB({ id: "currentVideo", type: "tiktok", url: embedUrl });
-
         localPlayer.style.display = 'none';
         localPlayer.pause();
         localPlayer.src = '';
 
-        embedPlayer.src = embedUrl;
+        let finalEmbedUrl = `https://www.tiktok.com/player/v1/${urlValue.split('/video/')[1]?.split('?')[0] || ''}?autoplay=1`;
+        
+        if(!finalEmbedUrl.endsWith('/')){
+             finalEmbedUrl = urlValue; 
+        }
+
+        embedPlayer.src = finalEmbedUrl;
         embedPlayer.style.display = 'block';
 
-        alert("Link TikTok Terkonfirmasi!");
+        // Simpan data ke localStorage agar tidak hilang saat refresh
+        localStorage.setItem('videoType', 'tiktok');
+        localStorage.setItem('videoSource', finalEmbedUrl);
+
+        alert("Link TikTok Terkonfirmasi! Video siap diputar.");
         tiktokInput.value = ""; 
         activateVideoMode();
     } else {
-        alert("Tautan TikTok tidak valid!");
+        alert("Tautan TikTok tidak valid! Pastikan mengandung alamat 'tiktok.com'.");
     }
 });
 
-// --- 6. Fitur Close Video (Hapus dari Penyimpanan) ---
+// --- Fitur Close Video (Hapus Sesi Secara Permanen) ---
 closeVideoBtn.addEventListener('click', () => {
     const confirmClose = confirm("Apakah Anda yakin ingin menutup dan menyudahi video yang sedang diputar saat ini?");
     
     if (confirmClose) {
-        // Hapus data video dari IndexedDB agar saat di-refresh tidak muncul lagi
-        clearSavedVideo();
+        // Hapus penyimpanan permanen di browser
+        localStorage.removeItem('videoType');
+        localStorage.removeItem('videoSource');
 
-        // Hentikan Player
+        // Hentikan Player Lokal
         localPlayer.pause();
         localPlayer.src = '';
         localPlayer.style.display = 'none';
         
+        // Hentikan Player Embed
         embedPlayer.src = '';
         embedPlayer.style.display = 'none';
 
+        // Reset Input File
         localInput.value = "";
 
-        // Tampilan Semula
+        // Kembalikan Tampilan Awal
         videoWrapper.classList.remove('active');
         placeholderText.style.display = 'block';
         
+        // Kunci Kembali Fitur Pengontrol
         closeVideoBtn.classList.remove('enabled');
         closeVideoBtn.setAttribute('disabled', 'true');
         
