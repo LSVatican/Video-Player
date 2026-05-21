@@ -1,257 +1,306 @@
 :root {
-    --bg-color: #0b0b0e;
-    --container-bg: #12121a;
-    --accent-color: #00f2fe;
-    --accent-glow: rgba(0, 242, 254, 0.5);
-    --text-color: #ffffff;
-    --text-muted: #707080;
-    --border-glow: 0 0 15px var(--accent-glow);
+    --bg-color: #0b0c10;
+    --card-bg: #1f2833;
+    --glow-color: #00f2fe;
+    --glow-secondary: #4facfe;
+    --text-color: #c5c6c7;
+    --text-bright: #ffffff;
 }
 
-/* Reset Dasar */
 * {
-    box-sizing: border-box;
     margin: 0;
     padding: 0;
-    font-family: 'Segoe UI', Arial, sans-serif;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
     background-color: var(--bg-color);
     color: var(--text-color);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
     overflow-x: hidden;
+    min-height: 100vh;
 }
 
-/* Header & Posisi Tombol Kanan Atas */
+/* Watermark */
+.watermark {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    font-size: 14px;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.2);
+    text-shadow: 0 0 5px var(--glow-color);
+    z-index: 9999;
+    pointer-events: none;
+}
+
+/* Header */
 header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 30px;
-    background-color: var(--container-bg);
-    border-bottom: 2px solid var(--accent-color);
-    box-shadow: var(--border-glow);
+    padding: 20px 40px;
+    background: rgba(31, 40, 51, 0.8);
+    backdrop-filter: blur(10px);
+    border-bottom: 2px solid var(--glow-color);
+    box-shadow: 0 0 15px rgba(0, 242, 254, 0.3);
 }
 
-.logo-area h1 {
-    font-size: 22px;
-    font-weight: 700;
-    text-shadow: 0 0 8px var(--accent-glow);
+.logo {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--text-bright);
+    text-shadow: 0 0 10px var(--glow-color);
 }
 
-.watermark {
-    font-size: 11px;
-    color: var(--text-muted);
-    letter-spacing: 1px;
+.logo i {
+    color: var(--glow-color);
 }
 
-/* Desain Tombol */
-.btn-primary {
+/* Button Glow */
+.btn-glow {
     background: transparent;
-    color: var(--text-color);
-    border: 2px solid var(--accent-color);
-    padding: 8px 18px;
-    border-radius: 6px;
+    color: var(--text-bright);
+    border: 2px solid var(--glow-color);
+    padding: 10px 20px;
+    border-radius: 30px;
     cursor: pointer;
     font-weight: 600;
-    box-shadow: var(--border-glow);
     transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
 }
 
-.btn-primary:hover {
-    background: var(--accent-color);
-    color: #000;
+.btn-glow:hover {
+    background: var(--glow-color);
+    color: var(--bg-color);
+    box-shadow: 0 0 20px var(--glow-color);
+    transform: translateY(-2px);
 }
 
-.btn-danger {
-    background: #ff3838;
-    color: white;
-    border: none;
-    padding: 10px 30px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    box-shadow: 0 4px 10px rgba(255, 56, 56, 0.3);
-    transition: background 0.3s;
+/* Main Container & Video Wrapper */
+.player-container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 0 20px;
 }
 
-.btn-danger:disabled {
-    background: #2a2a35;
-    color: #555;
-    cursor: not-allowed;
-    box-shadow: none;
-}
-
-.btn-success {
-    background: #00b894;
-    color: white;
-    border: none;
-    padding: 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
+.video-wrapper {
+    position: relative;
     width: 100%;
-    margin-top: 15px;
-    transition: opacity 0.3s;
-}
-
-/* Area Utama / Background Video */
-main {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-}
-
-#player-container {
-    width: 100%;
-    max-width: 800px;
-    aspect-ratio: 16/9;
-    background-color: #1a1a24;
+    aspect-ratio: 16 / 9;
+    background: #000;
+    border: 2px solid #333;
     border-radius: 12px;
     display: flex;
-    align-items: center;
     justify-content: center;
-    position: relative;
+    align-items: center;
     overflow: hidden;
-    border: 2px dashed #333;
-    transition: all 0.5s ease;
+    transition: border-color 0.5s ease, box-shadow 0.5s ease;
 }
 
-/* Munculkan style background glow khusus kalau video sudah aktif */
-#player-container.active-video {
-    border: 2px solid var(--accent-color);
-    box-shadow: var(--border-glow);
-    background-color: #000;
+/* Munculkan efek glowing saat video aktif */
+.video-wrapper.active {
+    border-color: var(--glow-color);
+    box-shadow: 0 0 30px rgba(0, 242, 254, 0.4);
 }
 
-#placeholder-text {
-    color: var(--text-muted);
-    font-size: 16px;
+.placeholder-text {
+    color: #666;
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
 }
 
-#video-wrapper {
+.video-wrapper video, .video-wrapper iframe {
+    position: absolute;
     width: 100%;
     height: 100%;
+    border: none;
     display: none;
 }
 
-#video-wrapper video, #video-wrapper iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-}
-
-/* Letak Pengontrol di Bawah Background Video */
-#control-panel {
+/* Controls di bawah background video */
+.custom-controls {
     margin-top: 20px;
-    width: 100%;
-    max-width: 800px;
     display: flex;
     justify-content: center;
 }
 
-/* Struktur Pop-Up & Animasi Buka/Tutup */
-.modal {
+.btn-close-video {
+    background: #ff4757;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.btn-close-video.enabled {
+    opacity: 1;
+    pointer-events: auto;
+    box-shadow: 0 0 15px rgba(255, 71, 87, 0.4);
+}
+
+.btn-close-video.enabled:hover {
+    background: #ff6b81;
+    transform: scale(1.05);
+}
+
+/* Pop Up Styling */
+.popup-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.85);
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
     display: flex;
-    align-items: center;
     justify-content: center;
+    align-items: center;
+    z-index: 1000;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-    z-index: 1000;
+    transition: opacity 0.4s ease;
 }
 
-.modal.open {
+.popup-overlay.show {
     opacity: 1;
     pointer-events: auto;
 }
 
-.modal-content {
-    background: var(--container-bg);
+.popup-content {
+    background: var(--card-bg);
+    border: 2px solid var(--glow-secondary);
+    box-shadow: 0 0 25px rgba(79, 172, 254, 0.5);
     width: 90%;
-    max-width: 480px;
-    border-radius: 12px;
-    border: 2px solid var(--accent-color);
-    box-shadow: var(--border-glow);
+    max-width: 500px;
+    border-radius: 16px;
     padding: 25px;
-    position: relative;
-    transform: translateY(-30px);
-    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transform: scale(0.7) translateY(-50px);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.modal.open .modal-content {
-    transform: translateY(0);
+.popup-overlay.show .popup-content {
+    transform: scale(1) translateY(0);
 }
 
-.modal-header {
+.popup-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid #333;
+    padding-bottom: 15px;
     margin-bottom: 20px;
 }
 
-.close-btn {
+.popup-header h3 {
+    color: var(--text-bright);
+}
+
+.close-popup-x {
+    background: none;
+    border: none;
+    color: var(--text-color);
     font-size: 28px;
     cursor: pointer;
-    color: var(--text-muted);
 }
 
-/* Navigasi Tab Pop Up */
-.modal-tabs {
+.close-popup-x:hover {
+    color: #ff4757;
+}
+
+/* Tabs */
+.tab-menu {
     display: flex;
-    border-bottom: 2px solid #252535;
+    gap: 10px;
     margin-bottom: 20px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
 }
 
 .tab-btn {
     flex: 1;
-    background: none;
-    border: none;
-    color: var(--text-muted);
+    background: #151c24;
+    color: var(--text-color);
+    border: 1px solid #333;
     padding: 10px;
+    border-radius: 8px;
     cursor: pointer;
     font-weight: 600;
-    font-size: 14px;
-    transition: all 0.3s;
+    transition: all 0.2s ease;
 }
 
 .tab-btn.active {
-    color: var(--accent-color);
-    border-bottom: 2px solid var(--accent-color);
+    background: var(--glow-secondary);
+    color: var(--bg-color);
+    border-color: var(--glow-secondary);
+    box-shadow: 0 0 10px rgba(79, 172, 254, 0.4);
 }
 
+/* Tab Content */
 .tab-content {
     display: none;
 }
 
 .tab-content.active {
     display: block;
+    animation: fadeIn 0.3s ease;
 }
 
-/* Form Input */
-input[type="text"], input[type="file"] {
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.tab-content p {
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.tab-content input[type="file"],
+.tab-content input[type="url"] {
     width: 100%;
     padding: 12px;
-    background: #1c1c27;
-    border: 1px solid #3a3a4f;
-    border-radius: 6px;
+    background: #111;
+    border: 1px solid #44
+    border: 1px solid #444;
     color: white;
-    margin-top: 12px;
+    border-radius: 8px;
+    margin-bottom: 15px;
     outline: none;
 }
 
-input[type="text"]:focus {
-    border-color: var(--accent-color);
+.tab-content input[type="url"]:focus {
+    border-color: var(--glow-secondary);
+    box-shadow: 0 0 8px rgba(79, 172, 254, 0.5);
+}
+
+.btn-confirm {
+    width: 100%;
+    background: linear-gradient(45deg, var(--glow-secondary), var(--glow-color));
+    color: var(--bg-color);
+    border: none;
+    padding: 12px;
+    font-weight: bold;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
+}
+
+.btn-confirm:hover {
+    opacity: 0.9;
+    box-shadow: 0 0 15px rgba(0, 242, 254, 0.6);
+}
+
+/* Responsivitas Versi Web */
+@media (min-width: 768px) {
+    .player-container {
+        margin: 60px auto;
+    }
 }

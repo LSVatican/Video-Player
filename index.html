@@ -4,71 +4,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Video Player</title>
-    <!-- Favicon dari gambar yang diimpor di Spck Editor -->
-    <link rel="icon" href="/favicon.jpg" type="image/png">
+    <!-- Ganti 'favicon.png' dengan nama file gambar yang Anda import di Spck Editor -->
+    <link rel="icon" type="image/png" href="/favicon.jpg">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
-    <!-- Header Atas -->
+    <!-- Watermark -->
+    <div class="watermark">by Daus XD</div>
+
+    <!-- Header & Tombol Upload -->
     <header>
-        <div class="logo-area">
-            <h1>Video Player</h1>
-            <span class="watermark">by Daus XD</span>
-        </div>
-        <!-- Tombol pemicu pop up di kanan atas -->
-        <button id="open-upload-btn" class="btn-primary">Unggah Video</button>
+        <div class="logo"><i class="fas fa-play-circle"></i> Video Player</div>
+        <button id="openUploadBtn" class="btn-glow"><i class="fas fa-upload"></i> Unggah Video</button>
     </header>
 
-    <!-- Konten Utama Halaman Beranda -->
-    <main>
-        <!-- Tempat memutar video / Background khusus -->
-        <div id="player-container" class="empty-state">
-            <div id="placeholder-text">Belum ada video yang diputar. Silakan unggah video!</div>
-            <!-- Wrapper dinamis untuk video player -->
-            <div id="video-wrapper"></div>
+    <!-- Main Container -->
+    <main class="player-container">
+        <!-- Background Video Area -->
+        <div id="videoWrapper" class="video-wrapper">
+            <div class="placeholder-text">Belum ada video yang dimuat. Silakan unggah video terlebih dahulu.</div>
+            
+            <!-- Player untuk Lokal -->
+            <video id="localPlayer" controls></video>
+            
+            <!-- Player untuk YouTube / TikTok -->
+            <iframe id="embedPlayer" allow="autoplay; encrypted-media" allowfullscreen></iframe>
         </div>
 
-        <!-- Alat pengontrol berada di bawah background video -->
-        <div id="control-panel">
-            <button id="close-video-btn" class="btn-danger" disabled>Close Video</button>
+        <!-- Alat Pengontrol Kustom (Di bawah background video) -->
+        <div id="customControls" class="custom-controls">
+            <button id="closeVideoBtn" class="btn-close-video" disabled>
+                <i class="fas fa-times-circle"></i> Close Video
+            </button>
         </div>
     </main>
 
-    <!-- Halaman Pop-Up Khusus (Modal) -->
-    <div id="upload-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Pilih Sumber Video</h2>
-                <span id="close-modal-btn" class="close-btn">&times;</span>
+    <!-- Pop Up Unggah Video -->
+    <div id="uploadPopup" class="popup-overlay">
+        <div class="popup-content">
+            <div class="popup-header">
+                <h3><i class="fas fa-cloud-upload-alt"></i> Tempat Unggah Video</h3>
+                <button id="closePopupBtn" class="close-popup-x">&times;</button>
             </div>
-            
+
             <!-- Tab Menu -->
-            <div class="modal-tabs">
-                <button class="tab-btn active" data-tab="device-tab">Perangkat</button>
-                <button class="tab-btn" data-tab="youtube-tab">YouTube</button>
-                <button class="tab-btn" data-tab="tiktok-tab">TikTok</button>
-            </div>
-            
-            <!-- Konten Tab 1: Perangkat -->
-            <div class="tab-content active" id="device-tab">
-                <p>Pilih file video dari galeri penyimpanan perangkat Anda:</p>
-                <input type="file" id="device-video-input" accept="video/*">
-                <button id="confirm-device-btn" class="btn-success">Konfirmasi</button>
+            <div class="tab-menu">
+                <button class="tab-btn active" data-tab="tab-lokal"><i class="fas fa-file-video"></i> Perangkat</button>
+                <button class="tab-btn" data-tab="tab-youtube"><i class="fab fa-youtube"></i> YouTube</button>
+                <button class="tab-btn" data-tab="tab-tiktok"><i class="fab fa-tiktok"></i> TikTok</button>
             </div>
 
-            <!-- Konten Tab 2: YouTube -->
-            <div class="tab-content" id="youtube-tab">
-                <p>Masukkan link video YouTube:</p>
-                <input type="text" id="youtube-link-input" placeholder="https://www.youtube.com/watch?v=... atau https://youtu.be/...">
-                <button id="confirm-youtube-btn" class="btn-success">Konfirmasi</button>
-            </div>
+            <!-- Isi Tab -->
+            <div class="tab-container">
+                <!-- Tab Perangkat -->
+                <div id="tab-lokal" class="tab-content active">
+                    <p>Pilih file video dari penyimpanan perangkat Anda:</p>
+                    <input type="file" id="localInput" accept="video/*">
+                    <button id="confirmLocalBtn" class="btn-confirm">Konfirmasi</button>
+                </div>
 
-            <!-- Konten Tab 3: TikTok -->
-            <div class="tab-content" id="tiktok-tab">
-                <p>Masukkan link video TikTok:</p>
-                <input type="text" id="tiktok-link-input" placeholder="https://www.tiktok.com/@username/video/...">
-                <button id="confirm-tiktok-btn" class="btn-success">Konfirmasi</button>
+                <!-- Tab YouTube -->
+                <div id="tab-youtube" class="tab-content">
+                    <p>Masukkan link video YouTube:</p>
+                    <input type="url" id="youtubeInput" placeholder="https://www.youtube.com/watch?v=... atau https://youtu.be/...">
+                    <button id="confirmYoutubeBtn" class="btn-confirm">Konfirmasi</button>
+                </div>
+
+                <!-- Tab TikTok -->
+                <div id="tab-tiktok" class="tab-content">
+                    <p>Masukkan link video TikTok:</p>
+                    <input type="url" id="tiktokInput" placeholder="https://www.tiktok.com/@user/video/... atau https://vm.tiktok.com/...">
+                    <button id="confirmTiktokBtn" class="btn-confirm">Konfirmasi</button>
+                </div>
             </div>
         </div>
     </div>

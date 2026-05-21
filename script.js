@@ -1,250 +1,186 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // ==========================================
-    // DEFINISI ELEMEN DOM
-    // ==========================================
-    const openUploadBtn = document.getElementById('open-upload-btn');
-    const closeModalBtn = document.getElementById('close-modal-btn');
-    const uploadModal = document.getElementById('upload-modal');
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
+// Elemen DOM
+const openUploadBtn = document.getElementById('openUploadBtn');
+const closePopupBtn = document.getElementById('closePopupBtn');
+const uploadPopup = document.getElementById('uploadPopup');
+const tabButtons = document.querySelectorAll('.tab-btn');
+const tabContents = document.querySelectorAll('.tab-content');
+
+const videoWrapper = document.getElementById('videoWrapper');
+const placeholderText = document.querySelector('.placeholder-text');
+const localPlayer = document.getElementById('localPlayer');
+const embedPlayer = document.getElementById('embedPlayer');
+const closeVideoBtn = document.getElementById('closeVideoBtn');
+
+// Elemen Form Input & Konfirmasi
+const localInput = document.getElementById('localInput');
+const youtubeInput = document.getElementById('youtubeInput');
+const tiktokInput = document.getElementById('tiktokInput');
+
+const confirmLocalBtn = document.getElementById('confirmLocalBtn');
+const confirmYoutubeBtn = document.getElementById('confirmYoutubeBtn');
+const confirmTiktokBtn = document.getElementById('confirmTiktokBtn');
+
+// Status Pemutar
+let isVideoPlaying = false;
+
+// --- Logika Pop-Up & Animasi ---
+openUploadBtn.addEventListener('click', () => {
+    // TOLAK PENGUNGGAHAN BARU JIKA VIDEO SEDANG BERJALAN
+    if (isVideoPlaying) {
+        alert("Gagal mengunggah! Harap tutup (Close Video) terlebih dahulu video yang sedang diputar saat ini.");
+        return;
+    }
+    uploadPopup.classList.add('show');
+});
+
+function closePopup() {
+    uploadPopup.classList.remove('show');
+}
+closePopupBtn.addEventListener('click', closePopup);
+
+// Sistem Penggantian Tab
+tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+        const targetTab = button.getAttribute('data-tab');
+        
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        tabContents.forEach(content => content.classList.remove('active'));
+        
+        button.classList.add('active');
+        document.getElementById(targetTab).classList.add('active');
+    });
+});
+
+// --- Pengaturan Tampilan Selesai Unggah ---
+function activateVideoMode() {
+    isVideoPlaying = true;
+    placeholderText.style.display = 'none';
+    videoWrapper.classList.add('active');
+    closeVideoBtn.classList.add('enabled');
+    closeVideoBtn.removeAttribute('disabled');
+    closePopup();
+}
+
+// --- Logika Pemrosesan Video ---
+
+// 1. Unggah dari Perangkat (Wajib File Video)
+confirmLocalBtn.addEventListener('click', () => {
+    const file = localInput.files[0];
+    if (!file) {
+        alert("Silakan pilih file video dari perangkat Anda terlebih dahulu!");
+        return;
+    }
     
-    const playerContainer = document.getElementById('player-container');
-    const placeholderText = document.getElementById('placeholder-text');
-    const videoWrapper = document.getElementById('video-wrapper');
-    const closeVideoBtn = document.getElementById('close-video-btn');
-
-    // Input Elemen Form
-    const deviceVideoInput = document.getElementById('device-video-input');
-    const youtubeLinkInput = document.getElementById('youtube-link-input');
-    const tiktokLinkInput = document.getElementById('tiktok-link-input');
-
-    // Tombol Konfirmasi Tab
-    const confirmDeviceBtn = document.getElementById('confirm-device-btn');
-    const confirmYoutubeBtn = document.getElementById('confirm-youtube-btn');
-    const confirmTiktokBtn = document.getElementById('confirm-tiktok-btn');
-
-    let isVideoPlaying = false;
-
-    // ==========================================
-    // SISTEM PENYIMPANAN INDEXEDDB (UNTUK FILE PERANGKAT)
-    // ==========================================
-    function initDB() {
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open('VideoPlayerDB', 1);
-            request.onupgradeneeded = (e) => {
-                const db = e.target.result;
-                if (!db.objectStoreNames.contains('videos')) {
-                    db.createObjectStore('videos');
-                }
-            };
-            request.onsuccess = (e) => resolve(e.target.result);
-            request.onerror = (e) => reject(e.target.error);
-        });
+    // Validasi Ekstensi/Tipe File Mime
+    if (!file.type.startsWith('video/')) {
+        alert("Format ditolak! File wajib berupa video.");
+        return;
     }
 
-    async function saveDeviceVideo(file) {
-        const db = await initDB();
-        const tx = db.transaction('videos', 'readwrite');
-        tx.objectStore('videos').put(file, 'currentVideo');
-        return tx.complete;
+    alert(`Berhasil mengunggah: ${file.name}`);
+    
+    const fileURL = URL.createObjectURL(file);
+    embedPlayer.style.display = 'none';
+    embedPlayer.src = '';
+    
+    localPlayer.src = fileURL;
+    localPlayer.style.display = 'block';
+    localPlayer.play();
+    
+    activateVideoMode();
+});
+
+// 2. Unggah Link YouTube Asli
+confirmYoutubeBtn.addEventListener('click', () => {
+    const urlValue = youtubeInput.value.trim();
+    if (!urlValue) {
+        alert("Silakan masukkan tautan video YouTube terlebih dahulu!");
+        return;
     }
 
-    async function getDeviceVideo() {
-        const db = await initDB();
-        return new Promise((resolve) => {
-            const tx = db.transaction('videos', 'readonly');
-            const request = tx.objectStore('videos').get('currentVideo');
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => resolve(null);
-        });
-    }
+    let videoId = "";
+    // Regex parsing ID video YouTube biasa maupun short url (youtu.be)
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = urlValue.match(regExp);
 
-    async function clearDeviceVideo() {
-        const db = await initDB();
-        const tx = db.transaction('videos', 'readwrite');
-        tx.objectStore('videos').delete('currentVideo');
-    }
-
-    // ==========================================
-    // FITUR BARU: FUNGSI RESET / HAPUS INPUT AUTOMATIS
-    // ==========================================
-    function resetInputs() {
-        deviceVideoInput.value = '';   // Menghapus file yang sempat dipilih
-        youtubeLinkInput.value = '';   // Mengosongkan kolom link YouTube
-        tiktokLinkInput.value = '';    // Mengosongkan kolom link TikTok
-    }
-
-    // ==========================================
-    // KONTROL POP-UP (MODAL) & NAVIGASI TAB
-    // ==========================================
-
-    // Trigger Buka Pop-Up (Ditolak Jika Video Sedang Diputar)
-    openUploadBtn.addEventListener('click', () => {
-        if (isVideoPlaying) {
-            alert('Pengunggahan ditolak! Silakan tutup (close) video yang sedang berjalan terlebih dahulu.');
-            return;
-        }
-        uploadModal.classList.add('open');
-    });
-
-    // Tutup Pop-Up melalui tombol 'X' (Otomatis Menghapus Inputan yang belum diunggah)
-    closeModalBtn.addEventListener('click', () => {
-        uploadModal.classList.remove('open');
-        resetInputs(); // <--- Fungsi penghapus dijalankan di sini
-    });
-
-    // Navigasi Tab Sistem di dalam Pop-Up
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            tabBtns.forEach(b => b.classList.remove('active'));
-            tabContents.forEach(c => c.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById(btn.dataset.tab).classList.add('active');
-        });
-    });
-
-    // ==========================================
-    // PARSER LINK (YOUTUBE & TIKTOK)
-    // ==========================================
-    function parseYouTube(url) {
-        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-        const match = url.match(regExp);
-        return (match && match[2].length === 11) ? match[2] : null;
-    }
-
-    function parseTikTok(url) {
-        const regExp = /\/video\/(\d+)/;
-        const match = url.match(regExp);
-        return (match && match[1]) ? match[1] : null;
-    }
-
-    // Mengaktifkan Tampilan Player & Animasi Background Glow
-    function activateVideoPlayer() {
-        placeholderText.style.display = 'none';
-        videoWrapper.style.display = 'block';
-        playerContainer.classList.add('active-video');
-        closeVideoBtn.removeAttribute('disabled');
-        isVideoPlaying = true;
-        uploadModal.classList.remove('open');
-        resetInputs(); // Bersihkan sisa inputan setelah sukses tayang
-    }
-
-    // ==========================================
-    // LOGIKA PROSES KONFIRMASI UNGHAH
-    // ==========================================
-
-    // 1. Konfirmasi Tab Perangkat (Wajib Video)
-    confirmDeviceBtn.addEventListener('click', async () => {
-        const file = deviceVideoInput.files[0];
-        if (!file) {
-            alert('Silakan pilih berkas file video terlebih dahulu!');
-            return;
-        }
-        if (!file.type.startsWith('video/')) {
-            alert('Format salah! Anda wajib mengunggah file video dari perangkat.');
-            return;
-        }
-
-        alert('Informasi: Berhasil memuat video dari perangkat Anda!');
+    if (match && match[2].length === 11) {
+        videoId = match[2];
         
-        // Simpan ke database lokal agar kebal refresh
-        await saveDeviceVideo(file);
-        localStorage.setItem('video_state', JSON.stringify({ type: 'device', source: 'local' }));
+        localPlayer.style.display = 'none';
+        localPlayer.pause();
+        localPlayer.src = '';
 
-        const fileURL = URL.createObjectURL(file);
-        videoWrapper.innerHTML = `<video src="${fileURL}" controls autoplay></video>`;
-        activateVideoPlayer();
-    });
-
-    // 2. Konfirmasi Tab YouTube Link
-    confirmYoutubeBtn.addEventListener('click', () => {
-        const url = youtubeLinkInput.value.trim();
-        if (!url) {
-            alert('Masukkan tautan video YouTube terlebih dahulu!');
-            return;
-        }
-        const videoId = parseYouTube(url);
-        if (!videoId) {
-            alert('Link YouTube asli tidak valid!');
-            return;
-        }
-
-        alert('Informasi: Link YouTube berhasil dikonfirmasi dan siap diputar!');
+        embedPlayer.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        embedPlayer.style.display = 'block';
         
-        // Simpan status state ke localStorage
-        localStorage.setItem('video_state', JSON.stringify({ type: 'youtube', source: videoId }));
+        alert("Link YouTube Terkonfirmasi! Video siap diputar.");
+        youtubeInput.value = ""; // Otomatis mengosongkan input link setelah berhasil
+        activateVideoMode();
+    } else {
+        alert("Tautan YouTube tidak valid! Gunakan tautan asli video YouTube.");
+    }
+});
 
-        videoWrapper.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-        activateVideoPlayer();
-    });
-
-    // 3. Konfirmasi Tab TikTok Link
-    confirmTiktokBtn.addEventListener('click', () => {
-        const url = tiktokLinkInput.value.trim();
-        if (!url) {
-            alert('Masukkan tautan video TikTok terlebih dahulu!');
-            return;
-        }
-        const videoId = parseTikTok(url);
-        if (!videoId) {
-            alert('Link TikTok asli tidak valid! Pastikan format tautannya tepat.');
-            return;
-        }
-
-        alert('Informasi: Link TikTok berhasil dikonfirmasi dan siap diputar!');
-        
-        // Simpan status state ke localStorage
-        localStorage.setItem('video_state', JSON.stringify({ type: 'tiktok', source: videoId }));
-
-        videoWrapper.innerHTML = `<iframe src="https://www.tiktok.com/embed/v2/${videoId}" allowfullscreen></iframe>`;
-        activateVideoPlayer();
-    });
-
-    // ==========================================
-    // SISTEM AUTOMATIS LOAD STATE (ANTI REFRESH)
-    // ==========================================
-    async function loadSavedVideo() {
-        const savedState = localStorage.getItem('video_state');
-        if (!savedState) return;
-
-        const { type, source } = JSON.parse(savedState);
-
-        if (type === 'youtube') {
-            videoWrapper.innerHTML = `<iframe src="https://www.youtube.com/embed/${source}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-            activateVideoPlayer();
-        } else if (type === 'tiktok') {
-            videoWrapper.innerHTML = `<iframe src="https://www.tiktok.com/embed/v2/${source}" allowfullscreen></iframe>`;
-            activateVideoPlayer();
-        } else if (type === 'device') {
-            const file = await getDeviceVideo();
-            if (file) {
-                const fileURL = URL.createObjectURL(file);
-                videoWrapper.innerHTML = `<video src="${fileURL}" controls autoplay></video>`;
-                activateVideoPlayer();
-            }
-        }
+// 3. Unggah Link TikTok Asli
+confirmTiktokBtn.addEventListener('click', () => {
+    const urlValue = tiktokInput.value.trim();
+    if (!urlValue) {
+        alert("Silakan masukkan tautan video TikTok terlebih dahulu!");
+        return;
     }
 
-    // Jalankan pemulihan video otomatis saat web dimuat ulang
-    loadSavedVideo();
+    // Melakukan pengecekan sederhana format tautan tiktok asli
+    if (urlValue.includes('tiktok.com')) {
+        localPlayer.style.display = 'none';
+        localPlayer.pause();
+        localPlayer.src = '';
 
-    // ==========================================
-    // FITUR CLOSE VIDEO (KEMBALI KE SEMULA)
-    // ==========================================
-    closeVideoBtn.addEventListener('click', async () => {
-        const confirmClose = confirm('Apakah Anda yakin ingin menutup video yang sedang diputar?');
-        if (confirmClose) {
-            // Hapus total data dari memori browser
-            localStorage.removeItem('video_state');
-            await clearDeviceVideo();
-
-            // Kembalikan tampilan halaman beranda seperti semula
-            videoWrapper.innerHTML = '';
-            videoWrapper.style.display = 'none';
-            placeholderText.style.display = 'block';
-            playerContainer.classList.remove('active-video'); 
-            closeVideoBtn.setAttribute('disabled', 'true');
-            isVideoPlaying = false;
+        // Menggunakan struktur embed standar resmi TikTok
+        // Catatan: Beberapa browser memblokir iframe tiktok tertentu karena proteksi pelacakan, disarankan menggunakan format link share desktop lengkap
+        embedPlayer.src = `https://www.tiktok.com/player/v1/${urlValue.split('/video/')[1]?.split('?')[0] || ''}?autoplay=1`;
+        
+        // Cadangan alternatif jika id video tidak didapat langsung secara split: memuat embed block utuh
+        if(!embedPlayer.src.endsWith('/')){
+             embedPlayer.src = urlValue; 
         }
-    });
+
+        embedPlayer.style.display = 'block';
+
+        alert("Link TikTok Terkonfirmasi! Video siap diputar.");
+        tiktokInput.value = ""; // Otomatis mengosongkan input link setelah berhasil
+        activateVideoMode();
+    } else {
+        alert("Tautan TikTok tidak valid! Pastikan mengandung alamat 'tiktok.com'.");
+    }
+});
+
+// --- Fitur Close Video (Kembali ke Semula) ---
+closeVideoBtn.addEventListener('click', () => {
+    // FITUR KONFIRMASI CLOSE VIDEO
+    const confirmClose = confirm("Apakah Anda yakin ingin menutup dan menyudahi video yang sedang diputar saat ini?");
+    
+    if (confirmClose) {
+        // Hentikan Player Lokal
+        localPlayer.pause();
+        localPlayer.src = '';
+        localPlayer.style.display = 'none';
+        
+        // Hentikan Player Embed
+        embedPlayer.src = '';
+        embedPlayer.style.display = 'none';
+
+        // Reset Input File
+        localInput.value = "";
+
+        // Kembalikan Tampilan Awal
+        videoWrapper.classList.remove('active');
+        placeholderText.style.display = 'block';
+        
+        // Kunci Kembali Fitur Pengontrol
+        closeVideoBtn.classList.remove('enabled');
+        closeVideoBtn.setAttribute('disabled', 'true');
+        
+        isVideoPlaying = false;
+        alert("Pemutar video telah di-reset kembali seperti semula.");
+    }
 });
