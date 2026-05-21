@@ -217,43 +217,57 @@ confirmTiktokBtn.addEventListener('click', () => {
     }
 });
 
-// --- FITUR CLOSE VIDEO (Hapus data permanen dari Penyimpanan) ---
+// --- FITUR CLOSE VIDEO (Hapus data permanen dari LocalStorage, IndexedDB, dan Cookie) ---
 closeVideoBtn.addEventListener('click', () => {
     const confirmClose = confirm("Apakah Anda yakin ingin menutup dan menyudahi video yang sedang diputar saat ini?");
     
     if (confirmClose) {
-        // 1. Hapus semua data simpanan di localStorage & IndexedDB
+        // 1. Hapus semua data simpanan di localStorage
         localStorage.removeItem('savedVideoType');
         localStorage.removeItem('savedVideoSrc');
         
+        // 2. Hapus data simpanan di IndexedDB
         if (db) {
             const transaction = db.transaction([storeName], "readwrite");
             const store = transaction.objectStore(storeName);
             store.delete("currentVideo");
         }
 
-        // Hentikan Player Lokal
+        // 3. HAPUS OTOMATIS SEMUA COOKIE DI BROWSER
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i];
+            const eqPos = cookie.indexOf("=");
+            const name = eqPos > -1 ? cookie.substr(0, eqPos).trim() : cookie.trim();
+            
+            // Mengatur tanggal kedaluwarsa cookie ke masa lalu agar terhapus otomatis oleh browser
+            document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            // Cadangan untuk domain spesifik (jika berjalan di sub-domain/hosting tertentu)
+            document.cookie = name + "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=" + window.location.hostname + ";";
+        }
+
+        // 4. Hentikan Player Lokal
         localPlayer.pause();
         localPlayer.src = '';
         localPlayer.style.display = 'none';
         
-        // Hentikan Player Embed
+        // 5. Hentikan Player Embed (YouTube/TikTok)
         embedPlayer.src = '';
         embedPlayer.style.display = 'none';
 
-        // Reset Input File
+        // 6. Reset Input File
         localInput.value = "";
 
-        // Kembalikan Tampilan Awal
+        // 7. Kembalikan Tampilan Awal
         videoWrapper.classList.remove('active');
         placeholderText.style.display = 'block';
         
-        // Kunci Kembali Fitur Pengontrol
+        // 8. Kunci Kembali Fitur Pengontrol
         closeVideoBtn.classList.remove('enabled');
         closeVideoBtn.setAttribute('disabled', 'true');
         
         isVideoPlaying = false;
-        alert("Pemutar video telah di-reset. Data simpanan telah dihapus.");
+        alert("Pemutar video telah di-reset. Seluruh data penyimpanan dan cookie browser berhasil dihapus otomatis!");
     }
 });
 
