@@ -16,9 +16,12 @@
 
     <!-- Header & Tombol Upload -->
     <header>
-        <div class="logo"><i class="fas fa-play-circle"></i> Video Player</div>
+    <div class="logo"><i class="fas fa-play-circle"></i> Video Player</div>
+    <div class="header-buttons">
+        <button id="openRatingBtn" class="btn-rating"><i class="fas fa-star"></i> Beri Rating</button>
         <button id="openUploadBtn" class="btn-glow"><i class="fas fa-upload"></i> Unggah Video</button>
-    </header>
+    </div>
+</header>
 
     <!-- Main Container -->
     <main class="player-container">
@@ -62,25 +65,50 @@
                 <div id="tab-lokal" class="tab-content active">
                     <p>Pilih file video dari penyimpanan perangkat Anda:</p>
                     <input type="file" id="localInput" accept="video/*">
-                    <button id="confirmLocalBtn" class="btn-confirm">Konfirmasi</button>
+                    <button id="confirmLocalBtn" class="btn-confirm">Konfirmasi Unggah</button>
                 </div>
 
                 <!-- Tab YouTube -->
                 <div id="tab-youtube" class="tab-content">
-                    <p>Masukkan link video YouTube:</p>
+                    <p>Masukkan link video YouTube asli:</p>
                     <input type="url" id="youtubeInput" placeholder="https://www.youtube.com/watch?v=... atau https://youtu.be/...">
-                    <button id="confirmYoutubeBtn" class="btn-confirm">Konfirmasi</button>
+                    <button id="confirmYoutubeBtn" class="btn-confirm">Konfirmasi Link YouTube</button>
                 </div>
 
                 <!-- Tab TikTok -->
                 <div id="tab-tiktok" class="tab-content">
-                    <p>Masukkan link video TikTok:</p>
+                    <p>Masukkan link video TikTok asli:</p>
                     <input type="url" id="tiktokInput" placeholder="https://www.tiktok.com/@user/video/... atau https://vm.tiktok.com/...">
-                    <button id="confirmTiktokBtn" class="btn-confirm">Konfirmasi</button>
+                    <button id="confirmTiktokBtn" class="btn-confirm">Konfirmasi Link TikTok</button>
                 </div>
             </div>
         </div>
     </div>
+    
+    <div id="ratingPopup" class="popup-bottom-overlay">
+    <div class="popup-bottom-content">
+        <div class="popup-bottom-header">
+            <h3><i class="fas fa-star-half-alt"></i> Beri Rating Website</h3>
+            <button id="closeRatingPopupBtn" class="close-popup-x">&times;</button>
+        </div>
+        
+        <form id="ratingForm">
+            <p>Pilih Rating:</p>
+            <div class="star-rating">
+                <input type="radio" name="stars" id="star5" value="5 Bintang"><label for="star5" class="fas fa-star"></label>
+                <input type="radio" name="stars" id="star4" value="4 Bintang"><label for="star4" class="fas fa-star"></label>
+                <input type="radio" name="stars" id="star3" value="3 Bintang"><label for="star3" class="fas fa-star"></label>
+                <input type="radio" name="stars" id="star2" value="2 Bintang"><label for="star2" class="fas fa-star"></label>
+                <input type="radio" name="stars" id="star1" value="1 Bintang"><label for="star1" class="fas fa-star"></label>
+            </div>
+
+            <p style="margin-top: 15px;">Rating Kustom / Masukan Tambahan (Anonim):</p>
+            <textarea id="customFeedback" name="feedback" placeholder="Tulis kritik, saran, atau rating kustom Anda di sini..." rows="4"></textarea>
+
+            <button type="submit" id="submitRatingBtn" class="btn-confirm" style="margin-top: 15px;">Kirim Rating</button>
+        </form>
+    </div>
+</div>
 
     <script src="script.js"></script>
 </body>

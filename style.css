@@ -304,3 +304,128 @@ header {
         margin: 60px auto;
     }
 }
+
+/* Tambahan Pengaturan Header */
+.header-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn-rating {
+    background: transparent;
+    color: #ffb830;
+    border: 2px solid #ffb830;
+    padding: 10px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-rating:hover {
+    background: #ffb830;
+    color: #000;
+    box-shadow: 0 0 15px #ffb830;
+}
+
+/* --- POP UP RATING (ANIMASI BAWAH-ATAS) --- */
+.popup-bottom-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+    align-items: flex-end; /* Memaksa pop up berada di bawah screen */
+    z-index: 1001;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+/* Content Pop Up di Bagian Bawah */
+.popup-bottom-content {
+    background: var(--card-bg);
+    border-top: 3px solid #ffb830;
+    box-shadow: 0 -5px 25px rgba(255, 184, 48, 0.3);
+    width: 100%;
+    max-width: 600px;
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    padding: 25px;
+    /* Animasi default: Tersembunyi di bawah layar */
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+/* Class pemicu saat pop up dibuka */
+.popup-bottom-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.popup-bottom-overlay.show .popup-bottom-content {
+    transform: translateY(0); /* Bergerak ke atas */
+}
+
+.popup-bottom-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #333;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.popup-bottom-header h3 {
+    color: #ffb830;
+}
+
+/* Sistem Bintang (Star Rating Form) */
+.star-rating {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label {
+    font-size: 30px;
+    color: #444;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.star-rating input:checked ~ label,
+.star-rating label:hover,
+.star-rating label:hover ~ label {
+    color: #ffb830;
+    text-shadow: 0 0 10px rgba(255, 184, 48, 0.5);
+}
+
+/* Textarea Rating Kustom */
+#customFeedback {
+    width: 100%;
+    background: #111;
+    border: 1px solid #444;
+    color: white;
+    padding: 12px;
+    border-radius: 8px;
+    resize: none;
+    outline: none;
+    margin-top: 8px;
+}
+
+#customFeedback:focus {
+    border-color: #ffb830;
+    box-shadow: 0 0 8px rgba(255, 184, 48, 0.4);
+}

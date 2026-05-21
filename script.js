@@ -256,3 +256,79 @@ closeVideoBtn.addEventListener('click', () => {
         alert("Pemutar video telah di-reset. Data simpanan telah dihapus.");
     }
 });
+
+// --- CARA MENDAPATKAN LINK EMAIL PADA JAVASCRIPT ---
+// 1. Pergi ke https://formspree.io/ dan daftar akun gratis.
+// 2. Buat form baru, lalu ganti kode "https://formspree.io/f/xxxxx" di bawah ini dengan link form Anda.
+const FORMSPREE_URL = "https://formspree.io/f/xdajejpn"; // <--- Ganti dengan ID Formspree Anda
+
+// Elemen DOM Tambahan untuk Rating
+const openRatingBtn = document.getElementById('openRatingBtn');
+const closeRatingPopupBtn = document.getElementById('closeRatingPopupBtn');
+const ratingPopup = document.getElementById('ratingPopup');
+const ratingForm = document.getElementById('ratingForm');
+
+// Buka Pop Up Rating (Animasi Bawah ke Atas)
+openRatingBtn.addEventListener('click', () => {
+    ratingPopup.classList.add('show');
+});
+
+// Tutup Pop Up Rating (Animasi Atas ke Bawah)
+closeRatingPopupBtn.addEventListener('click', () => {
+    ratingPopup.classList.remove('show');
+});
+
+// Event Handler Pengiriman Form Rating ke Email Pemilik
+ratingForm.addEventListener('submit', function(e) {
+    e.preventDefault(); // Mencegah halaman reload
+    
+    // Mengambil nilai bintang terpilih
+    const selectedStar = document.querySelector('input[name="stars"]:checked');
+    const customFeedback = document.getElementById('customFeedback').value.trim();
+
+    if (!selectedStar && !customFeedback) {
+        alert("Silakan pilih rating bintang atau isi rating kustom terlebih dahulu!");
+        return;
+    }
+
+    const starValue = selectedStar ? selectedStar.value : "Tidak Memilih Bintang";
+    
+    // Tombol Loading status
+    const submitBtn = document.getElementById('submitRatingBtn');
+    submitBtn.innerText = "Mengirim...";
+    submitBtn.setAttribute('disabled', 'true');
+
+    // Mengirim data secara anonim (tanpa identitas nama/email pengirim) menggunakan AJAX Fetch
+    fetch(FORMSPREE_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            Subjek: "Rating Baru dari Pengguna Website Video Player",
+            Pilihan_Bintang: starValue,
+            Rating_Kustom_Masukan: customFeedback || "Tidak ada masukan tambahan."
+        })
+    })
+    .then(response => {
+        if (response.ok) {
+            alert("Terima kasih! Rating anonim Anda berhasil dikirim.");
+            
+            // Reset Form & Tutup Pop Up
+            ratingForm.reset();
+            ratingPopup.classList.remove('show');
+        } else {
+            alert("Terjadi kesalahan sistem saat mengirim rating. Periksa kembali URL Formspree Anda.");
+        }
+    })
+    .catch(error => {
+        console.error("Error:", error);
+        alert("Gagal mengirim! Pastikan perangkat Anda terhubung ke internet.");
+    })
+    .finally(() => {
+        // Kembalikan status tombol semula
+        submitBtn.innerText = "Kirim Rating";
+        submitBtn.removeAttribute('disabled');
+    });
+});
